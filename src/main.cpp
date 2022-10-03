@@ -36,6 +36,8 @@
  */
 
 #include "FireItem.h"
+#include "HarbourBattery.h"
+#include "HarbourDisplayBlanking.h"
 
 #include <sailfishapp.h>
 
@@ -46,11 +48,15 @@
 #define APP_QML_IMPORT_V1 1
 #define APP_QML_IMPORT_V2 0
 
+#define REGISTER_SINGLETON(class,uri,v1,v2) \
+    qmlRegisterSingletonType<class>(uri, v1, v2, #class, class::createSingleton)
 #define REGISTER_TYPE(class,uri,v1,v2) \
     qmlRegisterType<class>(uri, v1, v2, #class)
 
 static void register_types(const char* uri, int v1, int v2)
 {
+    REGISTER_SINGLETON(HarbourBattery, uri, v1, v2);
+    REGISTER_TYPE(HarbourDisplayBlanking, uri, v1, v2);
     REGISTER_TYPE(FireItem, uri, v1, v2);
 }
 

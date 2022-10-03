@@ -4,7 +4,7 @@ NAME = fire
 TARGET = $${PREFIX}-$${NAME}
 CONFIG += sailfishapp link_pkgconfig
 PKGCONFIG += sailfishapp
-QT += qml quick
+QT += qml quick dbus
 LIBS += -ldl
 
 QMAKE_CXXFLAGS += -Wno-unused-parameter
@@ -13,7 +13,7 @@ QMAKE_CFLAGS += -Wno-unused-parameter
 TARGET_DATA_DIR = /usr/share/$${TARGET}
 
 CONFIG(debug, debug|release) {
-    DEFINES += DEBUG
+    DEFINES += DEBUG HARBOUR_DEBUG
 }
 
 OTHER_FILES += \
@@ -26,6 +26,29 @@ OTHER_FILES += \
     qml/images/*.svg \
     icons/*.svg \
     translations/*.ts
+
+# Directories
+
+HARBOUR_LIB_DIR = $${_PRO_FILE_PWD_}/harbour-lib
+
+# harbour-lib
+
+HARBOUR_LIB_INCLUDE = $${HARBOUR_LIB_DIR}/include
+HARBOUR_LIB_SRC = $${HARBOUR_LIB_DIR}/src
+
+INCLUDEPATH += \
+    $${HARBOUR_LIB_INCLUDE}
+
+HEADERS += \
+    $${HARBOUR_LIB_INCLUDE}/HarbourBattery.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourDebug.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourDisplayBlanking.h \
+    $${HARBOUR_LIB_SRC}/HarbourMce.h
+
+SOURCES += \
+    $${HARBOUR_LIB_SRC}/HarbourBattery.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourDisplayBlanking.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourMce.cpp
 
 # App
 

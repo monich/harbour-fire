@@ -1,7 +1,7 @@
 Name:           harbour-fire
 
 Summary:        Fireplace
-Version:        1.0.0
+Version:        1.0.1
 Release:        1
 License:        BSD
 URL:            https://github.com/monich/harbour-fire
@@ -11,6 +11,7 @@ Requires:       sailfishsilica-qt5
 Requires:       qt5-qtsvg-plugin-imageformat-svg
 BuildRequires:  pkgconfig(sailfishapp)
 BuildRequires:  pkgconfig(Qt5Core)
+BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
 

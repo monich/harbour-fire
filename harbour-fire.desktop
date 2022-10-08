@@ -4,3 +4,6 @@ Name=Fire
 X-Nemo-Application-Type=silica-qt5
 Icon=harbour-fire
 Exec=harbour-fire
+
+[X-Sailjail]
+Permissions=

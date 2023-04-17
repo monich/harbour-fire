@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2022-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2022 Jolla Ltd.
- * Copyright (C) 2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -46,7 +46,8 @@
 // FireItem::Private
 // ==========================================================================
 
-class FireItem::Private : public QObject
+class FireItem::Private :
+    public QObject
 {
     Q_OBJECT
 
@@ -55,6 +56,8 @@ public:
     static const qreal MaxIntensity;
     static const qreal MinThreshold;
     static const qreal MaxThreshold;
+    static const qreal kMinWind;
+    static const qreal kMaxWind;
     static const uint BlackPixel;
     static const QRgb ColorTable[];
 
@@ -78,6 +81,7 @@ public:
     QTimer* iRepaintTimer;
     qreal iIntensity;
     qreal iThreshold;
+    qreal iWind;
     uint iRand;
 };
 
@@ -85,6 +89,8 @@ const qreal FireItem::Private::MinIntensity = 0.0;
 const qreal FireItem::Private::MaxIntensity = 1.0;
 const qreal FireItem::Private::MinThreshold = 0.5;
 const qreal FireItem::Private::MaxThreshold = 0.8;
+const qreal FireItem::Private::kMinWind = -1.0;
+const qreal FireItem::Private::kMaxWind = 1.0;
 const uint FireItem::Private::BlackPixel = 0;
 const QRgb FireItem::Private::ColorTable[] = {
     #define C1(i) qRgb(0, 0, i << 1)
@@ -113,6 +119,7 @@ FireItem::Private::Private(
     iRepaintTimer(new QTimer(this)),
     iIntensity((MinIntensity + MaxIntensity) / 2),
     iThreshold(MinThreshold),
+    iWind((kMinWind + kMaxWind) / 2),
     iRand(time(NULL))
 {
     iColorTable.resize(sizeof(ColorTable)/sizeof(ColorTable[0]));
@@ -189,6 +196,8 @@ FireItem::Private::updateImage()
     // The rest of the image
     const int left = 0;
     const int right = w - 1;
+    const qreal b = qAbs(iWind);
+    const qreal d = 4 + b;
 
     for (y--; y >= 0; y--) {
         const uchar* lower = iImage.constScanLine(y + 1);
@@ -205,9 +214,16 @@ FireItem::Private::updateImage()
         }
 
         // The rest of the line
-        for (int x = left + 1; x < right; x++) {
-            row[x] = colorIndex(((uint)row[x] +
-                lower[x - 1] + lower[x] + lower[x + 1])/4.0);
+        if (iWind >= 0) {
+            for (int x = left + 1; x < right; x++) {
+                row[x] = colorIndex((row[x - 1] * b + row[x] +
+                    lower[x - 1] + lower[x] + lower[x + 1])/d);
+            }
+        } else {
+            for (int x = right - 1; x > left; x--) {
+                row[x] = colorIndex((row[x + 1] * b + row[x] +
+                    lower[x - 1] + lower[x] + lower[x + 1])/d);
+            }
         }
     }
 
@@ -271,6 +287,25 @@ FireItem::setIntensity(
         iPrivate->iThreshold = (iPrivate->minThreshold() + Private::MaxThreshold) / 2;
         iPrivate->randomizeThreshold();
         Q_EMIT intensityChanged();
+    }
+}
+
+qreal
+FireItem::wind() const
+{
+    return iPrivate->iWind;
+}
+
+void
+FireItem::setWind(
+    qreal aValue)
+{
+    const qreal value = qMin(qMax(aValue, Private::kMinWind), Private::kMaxWind);
+
+    if (iPrivate->iWind != value) {
+        iPrivate->iWind = value;
+        DBG(value);
+        Q_EMIT windChanged();
     }
 }
 

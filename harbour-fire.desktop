@@ -6,4 +6,4 @@ Icon=harbour-fire
 Exec=harbour-fire
 
 [X-Sailjail]
-Permissions=
+Permissions=Camera

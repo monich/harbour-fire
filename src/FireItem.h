@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2022-2023 Slava Monich <slava@monich.com>
  * Copyright (C) 2022 Jolla Ltd.
- * Copyright (C) 2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -40,11 +40,13 @@
 
 #include <QQuickPaintedItem>
 
-class FireItem: public QQuickPaintedItem
+class FireItem:
+    public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(qreal intensity READ intensity WRITE setIntensity NOTIFY intensityChanged)
+    Q_PROPERTY(qreal wind READ wind WRITE setWind NOTIFY windChanged)
 
 public:
     explicit FireItem(QQuickItem* aParent = Q_NULLPTR);
@@ -55,12 +57,16 @@ public:
     qreal intensity() const;
     void setIntensity(qreal);
 
+    qreal wind() const;
+    void setWind(qreal);
+
 protected:
     void paint(QPainter*) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void activeChanged();
     void intensityChanged();
+    void windChanged();
 
 private:
     class Private;

@@ -35,8 +35,9 @@
  * any official policies, either expressed or implied.
  */
 
-#include "FireDebug.h"
 #include "FireItem.h"
+
+#include "HarbourDebug.h"
 
 #include <QTimer>
 #include <QPainter>
@@ -168,7 +169,7 @@ FireItem::Private::randomizeThreshold()
 
     iThreshold = qMin(qMax(iThreshold + random() * adjust - adjust/2,
         minThreshold()), MaxThreshold);
-    DBG(iThreshold);
+    HDEBUG(iThreshold);
 }
 
 uchar
@@ -283,7 +284,7 @@ FireItem::setIntensity(
 
     if (iPrivate->iIntensity != value) {
         iPrivate->iIntensity = value;
-        DBG(value);
+        HDEBUG(value);
         iPrivate->iThreshold = (iPrivate->minThreshold() + Private::MaxThreshold) / 2;
         iPrivate->randomizeThreshold();
         Q_EMIT intensityChanged();
@@ -304,7 +305,7 @@ FireItem::setWind(
 
     if (iPrivate->iWind != value) {
         iPrivate->iWind = value;
-        DBG(value);
+        HDEBUG(value);
         Q_EMIT windChanged();
     }
 }

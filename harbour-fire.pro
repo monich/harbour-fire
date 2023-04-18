@@ -53,7 +53,6 @@ SOURCES += \
 # App
 
 HEADERS += \
-    src/FireDebug.h \
     src/FireItem.h
 
 SOURCES += \

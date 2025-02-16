@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Slava Monich <slava@monich.com>
+ * Copyright (C) 2022-2025 Slava Monich <slava@monich.com>
  * Copyright (C) 2022 Jolla Ltd.
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -8,15 +8,17 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -40,10 +42,14 @@
 
 #include <QQuickPaintedItem>
 
+// The item becomes idle if it's not being repainted for 500ms.
+// There's no need to pull updates from the sensors if the item isn't
+// being repainted.
 class FireItem:
     public QQuickPaintedItem
 {
     Q_OBJECT
+    Q_PROPERTY(bool idle READ idle NOTIFY idleChanged)
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(qreal intensity READ intensity WRITE setIntensity NOTIFY intensityChanged)
     Q_PROPERTY(qreal wind READ wind WRITE setWind NOTIFY windChanged)
@@ -51,6 +57,7 @@ class FireItem:
 public:
     explicit FireItem(QQuickItem* aParent = Q_NULLPTR);
 
+    bool idle() const;
     bool active() const;
     void setActive(bool);
 
@@ -64,6 +71,7 @@ protected:
     void paint(QPainter*) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
+    void idleChanged();
     void activeChanged();
     void intensityChanged();
     void windChanged();

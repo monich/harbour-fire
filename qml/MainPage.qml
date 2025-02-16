@@ -34,7 +34,7 @@ Page {
     Accelerometer {
         id: accelerometer
 
-        active: Qt.application.active
+        active: !fire.idle
 
         readonly property real g: (reading && active) ?
             (thisPage.orientation == Orientation.Landscape ? -reading.y :

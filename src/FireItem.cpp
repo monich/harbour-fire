@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Slava Monich <slava@monich.com>
+ * Copyright (C) 2022-2025 Slava Monich <slava@monich.com>
  * Copyright (C) 2022 Jolla Ltd.
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -8,15 +8,17 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -71,8 +73,13 @@ public:
     qreal minThreshold();
     void randomizeThreshold();
     void updateImage();
+    void repaint();
+
+signals:
+    void repainted();
 
 public slots:
+    void onRepainted();
     void onRepaintTimer();
 
 public:
@@ -80,6 +87,8 @@ public:
     QImage iImage;
     QVector<QRgb> iColorTable;
     QTimer* iRepaintTimer;
+    QTimer* iIdleTimer;
+    bool iActive;
     qreal iIntensity;
     qreal iThreshold;
     qreal iWind;
@@ -118,6 +127,8 @@ FireItem::Private::Private(
     iSourceSize(aWidth, aHeight),
     iImage(aWidth, aHeight + 2, QImage::Format_Indexed8),
     iRepaintTimer(new QTimer(this)),
+    iIdleTimer(new QTimer(this)),
+    iActive(false),
     iIntensity((MinIntensity + MaxIntensity) / 2),
     iThreshold(MinThreshold),
     iWind((kMinWind + kMaxWind) / 2),
@@ -130,8 +141,14 @@ FireItem::Private::Private(
     iImage.fill(BlackPixel);
 
     connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
-    iRepaintTimer->setInterval(40);
-    iRepaintTimer->start();
+    iRepaintTimer->setInterval(25);
+    iRepaintTimer->setSingleShot(true);
+
+    connect(this, SIGNAL(repainted()), SLOT(onRepainted()));
+    aParent->connect(iIdleTimer, SIGNAL(timeout()), SIGNAL(idleChanged()));
+    iIdleTimer->setInterval(500);
+    iIdleTimer->setSingleShot(true);
+    iIdleTimer->start();
 }
 
 FireItem*
@@ -141,12 +158,30 @@ FireItem::Private::fireItem()
 }
 
 void
-FireItem::Private::onRepaintTimer()
+FireItem::Private::repaint()
 {
     if (iImage.width() > 0) {
         updateImage();
     }
     fireItem()->update();
+}
+
+void
+FireItem::Private::onRepainted()
+{
+    bool wasIdle = !iIdleTimer->isActive();
+
+    iRepaintTimer->start();
+    iIdleTimer->start();
+    if (wasIdle) {
+        Q_EMIT fireItem()->idleChanged();
+    }
+}
+
+void
+FireItem::Private::onRepaintTimer()
+{
+    repaint();
 }
 
 qreal
@@ -247,24 +282,27 @@ FireItem::FireItem(
 }
 
 bool
+FireItem::idle() const
+{
+    return !iPrivate->iIdleTimer->isActive();
+}
+
+bool
 FireItem::active() const
 {
-    return iPrivate->iRepaintTimer->isActive();
+    return iPrivate->iActive;
 }
 
 void
 FireItem::setActive(
     bool aActive)
 {
-    QTimer* repaintTimer = iPrivate->iRepaintTimer;
-
-    if (aActive) {
-        if (!repaintTimer->isActive()) {
-            repaintTimer->start();
-            Q_EMIT activeChanged();
+    if (iPrivate->iActive != aActive) {
+        iPrivate->iActive = aActive;
+        HDEBUG(aActive);
+        if (aActive) {
+            iPrivate->repaint();
         }
-    } else if (repaintTimer->isActive()) {
-        repaintTimer->stop();
         Q_EMIT activeChanged();
     }
 }
@@ -318,6 +356,11 @@ FireItem::paint(
     const int h = height();
     const int minTargetHeight = h / 2;
     QRect sourceRect(QPoint(), iPrivate->iSourceSize);
+
+    if (iPrivate->iActive) {
+        // Timers cannot be started from another thread, hence the signal
+        Q_EMIT iPrivate->repainted();
+    }
 
     // Try to fill a reasonably large portion of the screen and
     // at the same time not to cut off too much

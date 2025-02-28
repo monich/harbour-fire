@@ -49,7 +49,7 @@ CoverBackground {
 
     CoverActionList {
         CoverAction {
-            iconSource: !actionIconTimer.running ? "" :
+            iconSource: !actionIconTimer.running ? "empty.png" :
                 _pause ? "image://theme/icon-cover-pause" : "image://theme/icon-cover-play"
             onTriggered: {
                 _pause = !_pause

@@ -21,7 +21,7 @@ OTHER_FILES += \
     README.md \
     rpm/*.spec \
     *.desktop \
-    qml/*.js \
+    qml/*.png \
     qml/*.qml \
     icons/*.svg \
     translations/*.ts

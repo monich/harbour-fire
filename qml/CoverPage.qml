@@ -18,10 +18,17 @@ CoverBackground {
     Accelerometer {
         id: accelerometer
 
-        readonly property real x: (reading && active) ? reading.x : 0
-        readonly property real g: (reading && active) ? Math.sqrt(reading.x * reading.x + reading.y * reading.y) : 0
+        readonly property real x: active ? _x : 0
+        readonly property real g: active ? _g : 0
+
+        property real _x
+        property real _g
 
         active: !fire.idle
+        onReadingChanged: {
+            _x = reading.x
+            _g = Math.sqrt(reading.x * reading.x + reading.y * reading.y)
+        }
     }
 
     Rectangle {

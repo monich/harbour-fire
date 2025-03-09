@@ -28,6 +28,7 @@ Categories:
 Icon: https://raw.githubusercontent.com/monich/harbour-fire/master/icons/harbour-fire.svg
 Screenshots:
 - https://home.monich.net/chum/harbour-fire/screenshots/screenshot-001.png
+- https://home.monich.net/chum/harbour-fire/screenshots/screenshot-002.png
 Url:
   Homepage: https://openrepos.net/content/slava/fire
 %endif

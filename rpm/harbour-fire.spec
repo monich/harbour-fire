@@ -1,7 +1,7 @@
 Name:           harbour-fire
 
 Summary:        Fireplace
-Version:        1.0.4
+Version:        1.0.5
 Release:        1
 License:        BSD
 URL:            https://github.com/monich/harbour-fire

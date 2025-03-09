@@ -43,7 +43,13 @@
 
 #include <QTimer>
 #include <QPainter>
-#include <QtMath>
+
+#if QT_VERSION >= 0x050000
+#  include <QtMath>
+#else
+#  include <math.h>
+#  define qFloor(x) floor(x)
+#endif
 
 // ==========================================================================
 // FireItem::Private
@@ -52,6 +58,7 @@
 class FireItem::Private :
     public QObject
 {
+    friend class FireItem;
     Q_OBJECT
 
 public:
@@ -274,11 +281,15 @@ FireItem::Private::updateImage()
 // ==========================================================================
 
 FireItem::FireItem(
-    QQuickItem* aParent) :
-    QQuickPaintedItem(aParent),
+    FireItemParent* aParent) :
+    FireItemBase(aParent),
     iPrivate(new Private(this, 320, 100))
 {
+#if QT_VERSION < 0x050000
+    setFlag(ItemHasNoContents, false);
+#else
     setFillColor(QColor(Qt::black));
+#endif
 }
 
 bool

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Slava Monich <slava@monich.com>
- * Copyright (C) 2022 Jolla Ltd.
+ * Copyright (C) 2025 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -37,62 +36,63 @@
  * any official policies, either expressed or implied.
  */
 
-#ifndef FIRE_ITEM_H
-#define FIRE_ITEM_H
+#include "MeegoFire.h"
 
-#include <QtGlobal>
+#include <QtDeclarative>
 
-#if QT_VERSION >= 0x050000
-#  include <QQuickPaintedItem>
-#  define FireItemBase QQuickPaintedItem
-#  define FireItemParent QQuickItem
-#else
-#  include <QDeclarativeItem>
-#  define FireItemBase QDeclarativeItem
-#  define FireItemParent QDeclarativeItem
+#ifdef HARMATTAN_BOOSTER
+#include <MDeclarativeCache>
 #endif
 
-// The item becomes idle if it's not being repainted for 500ms.
-// There's no need to pull updates from the sensors if the item isn't
-// being repainted.
-class FireItem:
-    public FireItemBase
+// ==========================================================================
+// MeegoView
+// ==========================================================================
+
+MeegoView::MeegoView(
+    QWidget* aParent) :
+    QDeclarativeView(aParent)
 {
-    Q_OBJECT
-    Q_PROPERTY(bool idle READ idle NOTIFY idleChanged)
-    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
-    Q_PROPERTY(qreal intensity READ intensity WRITE setIntensity NOTIFY intensityChanged)
-    Q_PROPERTY(qreal wind READ wind WRITE setWind NOTIFY windChanged)
+    connect(engine(), SIGNAL(quit()), SLOT(close()));
+    setResizeMode(QDeclarativeView::SizeRootObjectToView);
+}
 
-public:
-    explicit FireItem(FireItemParent* aParent = NULL);
+void
+MeegoView::show()
+{
+    showFullScreen();
+}
 
-    bool idle() const;
-    bool active() const;
-    void setActive(bool);
+// ==========================================================================
+// MeegoApp
+// ==========================================================================
 
-    qreal intensity() const;
-    void setIntensity(qreal);
-
-    qreal wind() const;
-    void setWind(qreal);
-
-protected:
-    void paint(QPainter*);
-#if QT_VERSION < 0x050000
-    void paint(QPainter* aPainter, const QStyleOptionGraphicsItem*, QWidget*)
-        { paint(aPainter); }
+/* static */
+QApplication*
+MeegoApp::application(
+    int& argc,
+    char** argv)
+{
+#ifdef HARMATTAN_BOOSTER
+    return MDeclarativeCache::qApplication(argc, argv);
+#else
+    return new QApplication(argc, argv);
 #endif
+}
 
-Q_SIGNALS:
-    void idleChanged();
-    void activeChanged();
-    void intensityChanged();
-    void windChanged();
+/* static */
+QUrl
+MeegoApp::pathTo(
+    const QString& path)
+{
+    QString fullPath(QString::fromLatin1("%1/../%2").arg(
+        QCoreApplication::applicationDirPath(), path));
+    if (!QFileInfo(fullPath).exists()) fullPath = path;
+    return QUrl::fromLocalFile(fullPath);
+}
 
-private:
-    class Private;
-    Private* iPrivate;
-};
-
-#endif // FIRE_ITEM_H
+/* static */
+MeegoView*
+MeegoApp::createView()
+{
+    return new MeegoView();
+}

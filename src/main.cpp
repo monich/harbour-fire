@@ -38,45 +38,63 @@
  */
 
 #include "FireItem.h"
-#include "HarbourBattery.h"
 #include "HarbourDisplayBlanking.h"
-#include "HarbourSystemState.h"
 
-#include <sailfishapp.h>
-
-#include <QGuiApplication>
+#if QT_VERSION >= 0x050000
 #include <QtQuick>
+#else
+#include <QtDeclarative>
+#endif
 
+#ifdef HARMATTAN
+#include "MeegoFire.h"
+#define PlatformApp MeegoApp
+#define PlatformView MeegoView
+#define APP_QML_IMPORT  "meego.fire"
+#else
+#include <sailfishapp.h>
+#include "HarbourBattery.h"
+#include "HarbourSystemState.h"
+#define loadTranslations(translator,locale,filename,prefix,directory) \
+    ((translator)->load(locale,filename,prefix,directory))
+#define REGISTER_SINGLETON(class,uri,v1,v2) \
+    qmlRegisterSingletonType<class>(uri, v1, v2, #class, class::createSingleton)
+#define PlatformApp SailfishApp
+#define PlatformView QQuickView
 #define APP_QML_IMPORT  "harbour.fire"
+#endif
+
 #define APP_QML_IMPORT_V1 1
 #define APP_QML_IMPORT_V2 0
 
-#define REGISTER_SINGLETON(class,uri,v1,v2) \
-    qmlRegisterSingletonType<class>(uri, v1, v2, #class, class::createSingleton)
 #define REGISTER_TYPE(class,uri,v1,v2) \
     qmlRegisterType<class>(uri, v1, v2, #class)
 
 static void register_types(const char* uri, int v1, int v2)
 {
+#ifndef HARMATTAN
     REGISTER_SINGLETON(HarbourBattery, uri, v1, v2);
     REGISTER_SINGLETON(HarbourSystemState, uri, v1, v2);
+#endif
     REGISTER_TYPE(HarbourDisplayBlanking, uri, v1, v2);
     REGISTER_TYPE(FireItem, uri, v1, v2);
 }
 
-int main(int argc, char *argv[])
+Q_DECL_EXPORT int main(int argc, char *argv[])
 {
-    QGuiApplication* app = SailfishApp::application(argc, argv);
+    QCoreApplication* app = PlatformApp::application(argc, argv);
 
     app->setApplicationName("Fire");
     register_types(APP_QML_IMPORT, APP_QML_IMPORT_V1, APP_QML_IMPORT_V2);
 
     // Create the view
-    QQuickView* view = SailfishApp::createView();
+    PlatformView* view = PlatformApp::createView();
 
     // Initialize the view and show it
+#ifndef HARMATTAN
     view->setTitle("Fire");
-    view->setSource(SailfishApp::pathTo("qml/main.qml"));
+#endif
+    view->setSource(PlatformApp::pathTo("qml/main.qml"));
     view->showFullScreen();
 
     int ret = app->exec();

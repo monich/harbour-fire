@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Slava Monich <slava@monich.com>
- * Copyright (C) 2022 Jolla Ltd.
+ * Copyright (C) 2025 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -37,62 +36,29 @@
  * any official policies, either expressed or implied.
  */
 
-#ifndef FIRE_ITEM_H
-#define FIRE_ITEM_H
+#ifndef MEEGO_FIRE_H
+#define MEEGO_FIRE_H
 
-#include <QtGlobal>
+#include <QApplication>
+#include <QDeclarativeView>
+#include <QUrl>
 
-#if QT_VERSION >= 0x050000
-#  include <QQuickPaintedItem>
-#  define FireItemBase QQuickPaintedItem
-#  define FireItemParent QQuickItem
-#else
-#  include <QDeclarativeItem>
-#  define FireItemBase QDeclarativeItem
-#  define FireItemParent QDeclarativeItem
-#endif
-
-// The item becomes idle if it's not being repainted for 500ms.
-// There's no need to pull updates from the sensors if the item isn't
-// being repainted.
-class FireItem:
-    public FireItemBase
+class MeegoView :
+    public QDeclarativeView
 {
     Q_OBJECT
-    Q_PROPERTY(bool idle READ idle NOTIFY idleChanged)
-    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
-    Q_PROPERTY(qreal intensity READ intensity WRITE setIntensity NOTIFY intensityChanged)
-    Q_PROPERTY(qreal wind READ wind WRITE setWind NOTIFY windChanged)
 
 public:
-    explicit FireItem(FireItemParent* aParent = NULL);
-
-    bool idle() const;
-    bool active() const;
-    void setActive(bool);
-
-    qreal intensity() const;
-    void setIntensity(qreal);
-
-    qreal wind() const;
-    void setWind(qreal);
-
-protected:
-    void paint(QPainter*);
-#if QT_VERSION < 0x050000
-    void paint(QPainter* aPainter, const QStyleOptionGraphicsItem*, QWidget*)
-        { paint(aPainter); }
-#endif
-
-Q_SIGNALS:
-    void idleChanged();
-    void activeChanged();
-    void intensityChanged();
-    void windChanged();
-
-private:
-    class Private;
-    Private* iPrivate;
+    explicit MeegoView(QWidget* aParent = NULL);
+    void show();
 };
 
-#endif // FIRE_ITEM_H
+class MeegoApp
+{
+public:
+    static QApplication* application(int&, char**);
+    static QUrl pathTo(const QString&);
+    static MeegoView* createView();
+};
+
+#endif // MEEGO_FIRE_H

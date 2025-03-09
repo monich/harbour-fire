@@ -1,0 +1,54 @@
+Source: meego-fire
+Section: user/other
+Priority: optional
+Maintainer: Slava Monich <slava@monich.com>
+Build-Depends: debhelper (>= 5), libqt4-dev
+Standards-Version: 3.7.3
+Homepage: http://github.com/monich/harbour-fire
+
+Package: meego-fire
+Architecture: armel
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Light your fire!
+XSBC-Maemo-Display-Name: Fire
+XB-Maemo-Icon-26:
+ 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
+ QgAAAABJRU5ErkJggg==

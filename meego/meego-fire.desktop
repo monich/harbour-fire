@@ -1,0 +1,6 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Fire
+Icon=/usr/share/icons/hicolor/80x80/apps/meego-fire.png
+Exec=/usr/bin/invoker --type=d -s -S /opt/meego-fire/splash-portrait.png -L /opt/meego-fire/splash-landscape.png /opt/meego-fire/bin/meego-fire

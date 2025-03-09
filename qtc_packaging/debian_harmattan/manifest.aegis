@@ -1,0 +1,6 @@
+AutoGenerateAegisFile
+<aegis>
+    <request policy="add"/>
+    <for path="/opt/meego-fire/bin/meego-fire"/>
+    <for path="applauncherd-launcher::/usr/bin/applauncherd.bin" id=""/>
+</aegis>

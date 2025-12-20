@@ -1,7 +1,7 @@
 Name:           harbour-fire
 
 Summary:        Fireplace
-Version:        1.0.5
+Version:        1.0.6
 Release:        1
 License:        BSD
 URL:            https://github.com/monich/harbour-fire
@@ -17,7 +17,6 @@ BuildRequires:  pkgconfig(Qt5Quick)
 
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
 %{!?qtc_make:%define qtc_make make}
-%{?qtc_builddir:%define _builddir %qtc_builddir}
 
 %description
 Light your fire

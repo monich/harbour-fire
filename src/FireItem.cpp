@@ -207,10 +207,11 @@ FireItem::Private::minThreshold()
 void
 FireItem::Private::randomizeThreshold()
 {
-    const qreal adjust = (MaxThreshold - MinThreshold) / 2;
+    const qreal min = minThreshold();
+    const qreal adjust = (MaxThreshold - min) / 2;
 
-    iThreshold = qMin(qMax(iThreshold + random() * adjust - adjust/2,
-        minThreshold()), MaxThreshold);
+    iThreshold = qMin(qMax(iThreshold + adjust * (random() - 0.5), min),
+        MaxThreshold);
     HDEBUG(iThreshold);
 }
 
@@ -334,8 +335,14 @@ FireItem::setIntensity(
     if (iPrivate->iIntensity != value) {
         iPrivate->iIntensity = value;
         HDEBUG(value);
-        iPrivate->iThreshold = (iPrivate->minThreshold() + Private::MaxThreshold) / 2;
-        iPrivate->randomizeThreshold();
+        // Set minimum threshold for maximum intensity,
+        // maxiumum threshold for minimum intensity,
+        // everything in between interpolated linearly.
+        // That gives the user a good indication of what has changed.
+        const qreal min = iPrivate->minThreshold();
+        iPrivate->iThreshold = min + (Private::MaxThreshold - min) *
+            (Private::MaxIntensity - value) /
+            (Private::MaxIntensity - Private::MinIntensity);
         Q_EMIT intensityChanged();
     }
 }

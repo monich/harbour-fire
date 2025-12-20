@@ -210,7 +210,7 @@ FireItem::Private::randomizeThreshold()
     const qreal min = minThreshold();
     const qreal adjust = (MaxThreshold - min) / 2;
 
-    iThreshold = qMin(qMax(iThreshold + adjust * (random() - 0.5), min),
+    iThreshold = qMin(qMax(qreal(iThreshold + adjust * (random() - 0.5)), min),
         MaxThreshold);
     HDEBUG(iThreshold);
 }

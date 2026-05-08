@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Slava Monich <slava@monich.com>
+ * Copyright (C) 2022-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2022 Jolla Ltd.
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -40,10 +40,10 @@
 #ifndef FIRE_ITEM_H
 #define FIRE_ITEM_H
 
-#include <QtGlobal>
+#include <QtCore/QtGlobal> // Pull in QT_VERSION
 
 #if QT_VERSION >= 0x050000
-#  include <QQuickPaintedItem>
+#  include <QtQuick/QQuickPaintedItem>
 #  define FireItemBase QQuickPaintedItem
 #  define FireItemParent QQuickItem
 #else

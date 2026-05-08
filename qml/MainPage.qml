@@ -37,8 +37,8 @@ Page {
         active: !fire.idle
 
         readonly property real g: (reading && active) ?
-            (thisPage.orientation == Orientation.Landscape ? -reading.y :
-            thisPage.orientation == Orientation.LandscapeInverted ? reading.y :
-            thisPage.orientation == Orientation.PortraitInverted ? -reading.x : reading.x) : 0
+            (thisPage.orientation === Orientation.Landscape ? -reading.y :
+            thisPage.orientation === Orientation.LandscapeInverted ? reading.y :
+            thisPage.orientation === Orientation.PortraitInverted ? -reading.x : reading.x) : 0
     }
 }

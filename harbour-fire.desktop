@@ -6,4 +6,5 @@ Icon=harbour-fire
 Exec=harbour-fire
 
 [X-Sailjail]
+#Sandboxing=Disabled
 Permissions=Camera

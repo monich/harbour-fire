@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Slava Monich <slava@monich.com>
+ * Copyright (C) 2022-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2022 Jolla Ltd.
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -41,14 +41,19 @@
 
 #include "HarbourDebug.h"
 
-#include <QTimer>
-#include <QPainter>
+#include <QtCore/QTimer>
+#include <QtGui/QPainter>
 
 #if QT_VERSION >= 0x050000
-#  include <QtMath>
+#  include <QtCore/QtMath>
 #else
 #  include <math.h>
 #  define qFloor(x) floor(x)
+#endif
+
+// For performance logging:
+#if HARBOUR_DEBUG
+#  include <QtCore/QDateTime>
 #endif
 
 // ==========================================================================
@@ -58,7 +63,6 @@
 class FireItem::Private :
     public QObject
 {
-    friend class FireItem;
     Q_OBJECT
 
 public:
@@ -90,6 +94,10 @@ public slots:
     void onRepaintTimer();
 
 public:
+#if HARBOUR_DEBUG
+    int iRenderCount;
+    QDateTime iStartTime;
+#endif
     const QSize iSourceSize;
     QImage iImage;
     QVector<QRgb> iColorTable;
@@ -130,6 +138,10 @@ FireItem::Private::Private(
     int aWidth,
     int aHeight) :
     QObject(aParent),
+#if HARBOUR_DEBUG
+    iRenderCount(0),
+    iStartTime(QDateTime::currentDateTime()),
+#endif
     // The full height includes two invisible rows at the bottom
     iSourceSize(aWidth, aHeight),
     iImage(aWidth, aHeight + 2, QImage::Format_Indexed8),
@@ -183,6 +195,19 @@ FireItem::Private::onRepainted()
     if (wasIdle) {
         Q_EMIT fireItem()->idleChanged();
     }
+
+#if HARBOUR_DEBUG
+    // Performance log
+    iRenderCount++;
+    const QDateTime now(QDateTime::currentDateTime());
+    const int ms = iStartTime.msecsTo(now);
+
+    if (ms >= 1000 && iRenderCount >= 10) {
+        HDEBUG("====" << iRenderCount*1000.0/ms << "fps");
+        iRenderCount = 0;
+        iStartTime = now;
+    }
+#endif // HARBOUR_DEBUG
 }
 
 void

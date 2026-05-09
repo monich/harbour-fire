@@ -41,6 +41,7 @@
 
 #include "HarbourDebug.h"
 
+#include <QtCore/QDateTime>
 #include <QtCore/QTimer>
 #include <QtGui/QPainter>
 
@@ -51,10 +52,12 @@
 #  define qFloor(x) floor(x)
 #endif
 
-// For performance logging:
-#if HARBOUR_DEBUG
-#  include <QtCore/QDateTime>
-#endif
+#define MAX_FPS 20
+#define PAINT_HISTORY_SIZE (2 * MAX_FPS)
+#define REPAINT_INTERVAL_MS (1000 / MAX_FPS)
+#define RESET_TIME_MS (REPAINT_INTERVAL_MS * 10)
+#define MIN_REPAINT_INTERVAL_MS (REPAINT_INTERVAL_MS / 2)
+#define MAX_REPAINT_INTERVAL_MS (REPAINT_INTERVAL_MS * 2)
 
 // ==========================================================================
 // FireItem::Private
@@ -85,6 +88,7 @@ public:
     void randomizeThreshold();
     void updateImage();
     void repaint();
+    int repaintDelay(const QDateTime&);
 
 signals:
     void repainted();
@@ -108,6 +112,9 @@ public:
     qreal iThreshold;
     qreal iWind;
     uint iRand;
+    qint64 iPaintHistory[PAINT_HISTORY_SIZE];
+    uint iPaintHistoryStart;
+    uint iPaintHistorySize;
 };
 
 const qreal FireItem::Private::MinIntensity = 0.0;
@@ -151,8 +158,12 @@ FireItem::Private::Private(
     iIntensity((MinIntensity + MaxIntensity) / 2),
     iThreshold(MinThreshold),
     iWind((kMinWind + kMaxWind) / 2),
-    iRand(time(NULL))
+    iRand(time(NULL)),
+    iPaintHistoryStart(0),
+    iPaintHistorySize(0)
 {
+    memset(iPaintHistory, 0, sizeof(iPaintHistory));
+
     iColorTable.resize(sizeof(ColorTable)/sizeof(ColorTable[0]));
     memcpy(iColorTable.data(), ColorTable, sizeof(ColorTable));
 
@@ -160,7 +171,7 @@ FireItem::Private::Private(
     iImage.fill(BlackPixel);
 
     connect(iRepaintTimer, SIGNAL(timeout()), SLOT(onRepaintTimer()));
-    iRepaintTimer->setInterval(25);
+    iRepaintTimer->setInterval(MIN_REPAINT_INTERVAL_MS);
     iRepaintTimer->setSingleShot(true);
 
     connect(this, SIGNAL(repainted()), SLOT(onRepainted()));
@@ -188,18 +199,17 @@ FireItem::Private::repaint()
 void
 FireItem::Private::onRepainted()
 {
-    bool wasIdle = !iIdleTimer->isActive();
+    const QDateTime now(QDateTime::currentDateTime());
+    const bool wasIdle = !iIdleTimer->isActive();
 
+    iRepaintTimer->stop();
+    iRepaintTimer->setInterval(repaintDelay(now));
     iRepaintTimer->start();
     iIdleTimer->start();
-    if (wasIdle) {
-        Q_EMIT fireItem()->idleChanged();
-    }
 
 #if HARBOUR_DEBUG
     // Performance log
     iRenderCount++;
-    const QDateTime now(QDateTime::currentDateTime());
     const int ms = iStartTime.msecsTo(now);
 
     if (ms >= 1000 && iRenderCount >= 10) {
@@ -208,6 +218,10 @@ FireItem::Private::onRepainted()
         iStartTime = now;
     }
 #endif // HARBOUR_DEBUG
+
+    if (wasIdle) {
+        Q_EMIT fireItem()->idleChanged();
+    }
 }
 
 void
@@ -300,6 +314,66 @@ FireItem::Private::updateImage()
     if (random() > 0.95) {
         randomizeThreshold();
     }
+}
+
+int
+FireItem::Private::repaintDelay(
+    const QDateTime& aNow)
+{
+    const qint64 t0 = iPaintHistory[iPaintHistoryStart];
+    const qint64 t1 = aNow.currentMSecsSinceEpoch();
+    const uint i1 = (iPaintHistoryStart + iPaintHistorySize) % PAINT_HISTORY_SIZE;
+
+    // Fill the circular buffer with timestamps
+    iPaintHistory[i1] = t1;
+    iPaintHistorySize++;
+
+    if (iPaintHistorySize > PAINT_HISTORY_SIZE) {
+        iPaintHistoryStart += (iPaintHistorySize - PAINT_HISTORY_SIZE);
+        iPaintHistoryStart %= PAINT_HISTORY_SIZE;
+        iPaintHistorySize = PAINT_HISTORY_SIZE;
+    }
+
+    if (iPaintHistorySize > 1 && t1 > t0) {
+        const uint i2 = (i1 + PAINT_HISTORY_SIZE - 1) % PAINT_HISTORY_SIZE;
+        const qint64 t2 = iPaintHistory[i2];
+
+        if (t1 < t2 || (t1 - t2) > RESET_TIME_MS) {
+            // Either local time has changed or we haven't painted for too long.
+            // In either case the past repaint timestamps are now irrelevant.
+            HDEBUG("resetting fps history");
+            iPaintHistoryStart = i1;
+            iPaintHistorySize = 1;
+#if HARBOUR_DEBUG
+            iRenderCount = 0;
+            iStartTime = aNow;
+#endif // HARBOUR_DEBUG
+        } else {
+            // Calculate the real fps
+            const qreal fps = (qreal)1000 * (iPaintHistorySize - 1)/ (t1 - t0);
+
+            HVERBOSE(fps << "fps");
+            if (fps > MAX_FPS) {
+                qint64 ms = t0 + iPaintHistorySize * REPAINT_INTERVAL_MS - t1;
+
+                HVERBOSE(ms << "ms until the next repaint");
+                if (ms > MIN_REPAINT_INTERVAL_MS)  {
+                    // Don't slow down too much or too quickly
+                    if (ms > REPAINT_INTERVAL_MS)  {
+                        ms = (qMin((int) ms, MAX_REPAINT_INTERVAL_MS) +
+                            REPAINT_INTERVAL_MS) / 2;
+                    }
+                    HVERBOSE("repaint in " << ms << "ms");
+                    return ms;
+                }
+            }
+
+            // Try to catch up
+            return MIN_REPAINT_INTERVAL_MS;
+        }
+    }
+
+    return REPAINT_INTERVAL_MS;
 }
 
 // ==========================================================================

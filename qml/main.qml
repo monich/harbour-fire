@@ -14,6 +14,7 @@ ApplicationWindow {
             intensity: appWindow.intensity
         }
     }
+
     initialPage: Component {
         MainPage {
             id: mainPage
@@ -25,6 +26,20 @@ ApplicationWindow {
                 property: "intensity"
                 value: mainPage.intensity
             }
+        }
+    }
+
+    Component.onCompleted: {
+        // On devices with a cutout, the Page is narrowed in landscape by default,
+        // so that the cutout is left outside of the page. That's not what we want.
+        // Setting defaultPageCutoutMode to zero allows us to really run full screen,
+        // both in portrait and landscape orientations.
+
+        // The defaultPageCutoutMode property (and support for cutout in general)
+        // appeared in Sailfish OS 5
+
+        if ('defaultPageCutoutMode' in appWindow) {
+            appWindow.defaultPageCutoutMode = 0 // CutoutMode.FullScreen
         }
     }
 

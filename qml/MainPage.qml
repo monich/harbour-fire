@@ -6,6 +6,8 @@ import harbour.fire 1.0
 Page {
     id: thisPage
 
+    property alias intensity: fire.intensity
+
     FireItem {
         id: fire
 

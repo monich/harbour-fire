@@ -5,6 +5,8 @@ import Sailfish.Silica 1.0
 import harbour.fire 1.0
 
 CoverBackground {
+    property alias intensity: fire.intensity
+
     property bool _pause
     readonly property bool _darkOnLight: ('colorScheme' in Theme) && Theme.colorScheme === 1
     readonly property string _actionButtonImageSuffix: _darkOnLight ? ("?" + Theme.overlayBackgroundColor) : ""
@@ -29,8 +31,7 @@ CoverBackground {
 
             visible: false
             anchors.fill: parent
-            wind: Math.min(Math.max(accelerometer.x/9, -1), 1)
-            intensity: Math.min(Math.max(accelerometer.g/9, -1), 1)
+            wind: Math.min(Math.max(accelerometer.x/10, -1), 1)
             active: !HarbourSystemState.displayOff && !HarbourSystemState.locked && !_pause
         }
 
@@ -44,17 +45,10 @@ CoverBackground {
     Accelerometer {
         id: accelerometer
 
-        readonly property real x: active ? _x : 0
-        readonly property real g: active ? _g : 0
-
-        property real _x
-        property real _g
+        property real x
 
         active: !fire.idle
-        onReadingChanged: {
-            _x = reading.x
-            _g = Math.sqrt(reading.x * reading.x + reading.y * reading.y)
-        }
+        onReadingChanged: x = reading.x
     }
 
     Timer {

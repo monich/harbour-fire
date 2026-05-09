@@ -5,12 +5,26 @@ import harbour.fire 1.0
 ApplicationWindow {
     id: appWindow
 
+    property real intensity
+
     allowedOrientations: Orientation.All
 
-    cover: Component { CoverPage {} }
+    cover: Component {
+        CoverPage {
+            intensity: appWindow.intensity
+        }
+    }
     initialPage: Component {
         MainPage {
+            id: mainPage
+
             allowedOrientations: appWindow.allowedOrientations
+
+            Binding {
+                target: appWindow
+                property: "intensity"
+                value: mainPage.intensity
+            }
         }
     }
 

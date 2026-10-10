@@ -33,6 +33,17 @@ Page {
         onPositionChanged: fire.intensity = pressIntensity + (pressY - mouseY)/height
     }
 
+    Keys.onPressed: {
+        switch (event.key) {
+        case Qt.Key_Up:
+            intensity = Math.min(intensity + 0.1, 1);
+            break;
+        case Qt.Key_Down:
+            intensity = Math.max(intensity - 0.1, 0);
+            break;
+        }
+    }
+
     Accelerometer {
         id: accelerometer
 
